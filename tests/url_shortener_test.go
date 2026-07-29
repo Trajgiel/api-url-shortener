@@ -41,15 +41,14 @@ func TestURLShortener_SaveRedirectDelete_HappyPath(t *testing.T) {
 
 	body.Value("status").String().IsEqual("OK")
 	alias := body.Value("alias").String().NotEmpty().Raw()
-	id := int64(body.Value("id").Number().Raw())
 
 	e.GET("/" + alias).
 		Expect().
 		Status(http.StatusFound).
 		Header("Location").IsEqual(originalURL)
 
-	e.DELETE("/url/{id}").
-		WithPath("id", id).
+	e.DELETE("/url/{alias}").
+		WithPath("alias", alias).
 		WithBasicAuth(basicAuthUser, basicAuthPass).
 		Expect().
 		Status(http.StatusOK).
@@ -84,8 +83,8 @@ func TestURLShortener_Save_NoAuth(t *testing.T) {
 func TestURLShortener_Delete_NotFound(t *testing.T) {
 	e := newExpect(t)
 
-	e.DELETE("/url/{id}").
-		WithPath("id", 999999999).
+	e.DELETE("/url/{alias}").
+		WithPath("alias", "nonexistent-alias-xyz").
 		WithBasicAuth(basicAuthUser, basicAuthPass).
 		Expect().
 		Status(http.StatusOK).
