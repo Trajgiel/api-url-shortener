@@ -7,6 +7,7 @@ import (
 
 	"github.com/Trajgiel/api-url-shortener/internal/config"
 	"github.com/Trajgiel/api-url-shortener/internal/http-server/handlers/redirect"
+	del "github.com/Trajgiel/api-url-shortener/internal/http-server/handlers/url/delete"
 	"github.com/Trajgiel/api-url-shortener/internal/http-server/handlers/url/save"
 	mwLogger "github.com/Trajgiel/api-url-shortener/internal/http-server/middleware/logger"
 	"github.com/Trajgiel/api-url-shortener/internal/lib/logger/sl"
@@ -48,8 +49,10 @@ func main() {
 	// why GetURL did not find existing aliases
 	// router.Use(middleware.URLFormat)
 
+	// TODO: handlers
 	router.Post("/url", save.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
+	router.Delete("/{alias}", del.New(log, storage))
 
 	// TODO: run server
 	log.Info("starting server", slog.String("address", cfg.Address))
