@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	resp "github.com/Trajgiel/api-url-shortener/internal/lib/api/response"
 	"github.com/Trajgiel/api-url-shortener/internal/lib/logger/sl"
@@ -14,7 +15,7 @@ import (
 )
 
 type URLDeleter interface {
-	DeleteURL(alias string) error
+	DeleteURL(id int64) error
 }
 
 func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
@@ -26,16 +27,17 @@ func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		alias := chi.URLParam(r, "alias")
-		if alias == "" {
-			log.Info("alias is empty")
+		idParam := chi.URLParam(r, "id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			log.Info("invalid id", "id", idParam)
 			render.JSON(w, r, resp.Error("invalid request"))
 			return
 		}
 
-		err := urlDeleter.DeleteURL(alias)
+		err = urlDeleter.DeleteURL(id)
 		if errors.Is(err, storage.ErrURLNotFound) {
-			log.Info("url not found", "alias", alias)
+			log.Info("url not found", slog.Int64("id", id))
 			render.JSON(w, r, resp.Error("not found"))
 			return
 		}
@@ -45,7 +47,7 @@ func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
 			return
 		}
 
-		log.Info("url deleted", slog.String("alias", alias))
+		log.Info("url deleted", slog.Int64("id", id))
 
 		render.JSON(w, r, resp.OK())
 	}

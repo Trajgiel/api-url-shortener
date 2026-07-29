@@ -16,11 +16,11 @@ import (
 )
 
 type urlDeleterMock struct {
-	deleteURL func(alias string) error
+	deleteURL func(id int64) error
 }
 
-func (m *urlDeleterMock) DeleteURL(alias string) error {
-	return m.deleteURL(alias)
+func (m *urlDeleterMock) DeleteURL(id int64) error {
+	return m.deleteURL(id)
 }
 
 func discardLogger() *slog.Logger {
@@ -30,38 +30,44 @@ func discardLogger() *slog.Logger {
 func TestDeleteHandler(t *testing.T) {
 	cases := []struct {
 		name          string
-		alias         string
-		deleteURL     func(alias string) error
+		id            string
+		deleteURL     func(id int64) error
 		wantStatus    string
 		wantErrSubstr string
 	}{
 		{
-			name:  "success",
-			alias: "google",
-			deleteURL: func(alias string) error {
+			name: "success",
+			id:   "1",
+			deleteURL: func(id int64) error {
 				return nil
 			},
 			wantStatus: resp.StatusOk,
 		},
 		{
-			name:          "empty alias",
-			alias:         "",
+			name:          "empty id",
+			id:            "",
 			wantStatus:    resp.StatusError,
 			wantErrSubstr: "invalid request",
 		},
 		{
-			name:  "url not found",
-			alias: "unknown",
-			deleteURL: func(alias string) error {
+			name:          "non-numeric id",
+			id:            "abc",
+			wantStatus:    resp.StatusError,
+			wantErrSubstr: "invalid request",
+		},
+		{
+			name: "url not found",
+			id:   "42",
+			deleteURL: func(id int64) error {
 				return storage.ErrURLNotFound
 			},
 			wantStatus:    resp.StatusError,
 			wantErrSubstr: "not found",
 		},
 		{
-			name:  "unexpected storage error",
-			alias: "google",
-			deleteURL: func(alias string) error {
+			name: "unexpected storage error",
+			id:   "1",
+			deleteURL: func(id int64) error {
 				return errors.New("unexpected error")
 			},
 			wantStatus:    resp.StatusError,
@@ -75,10 +81,10 @@ func TestDeleteHandler(t *testing.T) {
 
 			handler := New(discardLogger(), deleterMock)
 
-			req := httptest.NewRequest(http.MethodDelete, "/"+tc.alias, nil)
+			req := httptest.NewRequest(http.MethodDelete, "/"+tc.id, nil)
 
 			rctx := chi.NewRouteContext()
-			rctx.URLParams.Add("alias", tc.alias)
+			rctx.URLParams.Add("id", tc.id)
 			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 			rr := httptest.NewRecorder()
