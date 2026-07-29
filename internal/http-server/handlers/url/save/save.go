@@ -22,6 +22,7 @@ type Request struct {
 type Response struct {
 	resp.Response
 	Alias string `json:"alias,omitempty"`
+	Id    int64  `json:"id,omitempty"`
 }
 
 const aliasLength = 6
@@ -79,6 +80,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
 			Alias:    alias,
+			Id:       id,
 		})
 	}
 }
