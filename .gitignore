@@ -30,3 +30,10 @@ go.work.sum
 # Editor/IDE
 .idea/
 .vscode/
+
+# Local config with real credentials (only used for local `make run`;
+# Railway/prod is configured entirely via env vars, see internal/config/config.go)
+config/local.yaml
+
+# Local sqlite database (runtime state, not source)
+storage/*.db
