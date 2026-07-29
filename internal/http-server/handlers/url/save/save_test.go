@@ -101,9 +101,9 @@ func TestSaveHandler(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			saver := &urlSaverMock{saveURL: tc.saveURL}
+			saverMock := &urlSaverMock{saveURL: tc.saveURL}
 
-			handler := New(discardLogger(), saver)
+			handler := New(discardLogger(), saverMock)
 
 			req := httptest.NewRequest(http.MethodPost, "/save", strings.NewReader(tc.body))
 			rr := httptest.NewRecorder()
